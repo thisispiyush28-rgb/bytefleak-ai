@@ -1,7 +1,7 @@
+<script>
 async function sendMessage() {
   const input = document.getElementById("userInput");
   const chat = document.getElementById("chat");
-
   const text = input.value.trim();
 
   if (!text) return;
@@ -17,8 +17,6 @@ async function sendMessage() {
   aiMessage.className = "message ai";
   aiMessage.textContent = "Thinking...";
   chat.appendChild(aiMessage);
-
-  chat.scrollTop = chat.scrollHeight;
 
   try {
     const response = await fetch(
@@ -51,3 +49,4 @@ async function sendMessage() {
 
   chat.scrollTop = chat.scrollHeight;
 }
+  </script>
