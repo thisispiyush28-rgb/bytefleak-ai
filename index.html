@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>ByteFleak AI</title>
 
   <style>
@@ -87,6 +88,7 @@
       outline: none;
       background: #292943;
       color: white;
+      font-size: 16px;
     }
 
     button {
@@ -96,6 +98,12 @@
       background: #6c45ff;
       color: white;
       font-weight: bold;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    button:active {
+      transform: scale(0.97);
     }
   </style>
 </head>
@@ -116,8 +124,100 @@
     </div>
 
     <div class="input-area">
-      <input id="userInput" type="text" placeholder="Ask ByteFleak AI...">
-      <button onclick="sendMessage()">Send</button>
+      <input
+        id="userInput"
+        type="text"
+        placeholder="Ask ByteFleak AI..."
+      >
+
+      <button id="sendButton" type="button">
+        Send
+      </button>
     </div>
 
- 
+  </div>
+
+  <script>
+    const input = document.getElementById("userInput");
+    const chat = document.getElementById("chat");
+    const sendButton = document.getElementById("sendButton");
+
+    sendButton.addEventListener("click", sendMessage);
+
+    input.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    });
+
+    async function sendMessage() {
+
+      const text = input.value.trim();
+
+      if (!text) {
+        return;
+      }
+
+      const userMessage = document.createElement("div");
+      userMessage.className = "message user";
+      userMessage.textContent = text;
+
+      chat.appendChild(userMessage);
+
+      input.value = "";
+
+      const aiMessage = document.createElement("div");
+      aiMessage.className = "message ai";
+      aiMessage.textContent = "Thinking...";
+
+      chat.appendChild(aiMessage);
+
+      chat.scrollTop = chat.scrollHeight;
+
+      try {
+
+        const response = await fetch(
+          "https://script.google.com/macros/s/AKfycbz_-iiisClXMkdjaArzSbmYWRU-KwAQvjftlKzUNisQ1EgeGBc9aFaLgUquMWCIM3CqEA/exec",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              message: text
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (
+          data.candidates &&
+          data.candidates[0] &&
+          data.candidates[0].content &&
+          data.candidates[0].content.parts &&
+          data.candidates[0].content.parts[0]
+        ) {
+
+          aiMessage.textContent =
+            data.candidates[0].content.parts[0].text;
+
+        } else {
+
+          aiMessage.textContent =
+            "Sorry, I couldn't get a response.";
+
+        }
+
+      } catch (error) {
+
+        console.error(error);
+
+        aiMessage.textContent =
+          "Connection error. Please try again.";
+
+      }
+
+      chat.scrollTop = chat.scrollHeight;
+    }
+  </script>
+
+</body>
+</html>
