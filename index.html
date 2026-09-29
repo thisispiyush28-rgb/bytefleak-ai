@@ -61,6 +61,7 @@
       border-radius: 14px;
       max-width: 85%;
       line-height: 1.5;
+      white-space: pre-wrap;
     }
 
     .ai {
@@ -100,6 +101,10 @@
       font-size: 15px;
       cursor: pointer;
     }
+
+    button:disabled {
+      opacity: 0.6;
+    }
   </style>
 </head>
 
@@ -123,6 +128,7 @@
         id="userInput"
         type="text"
         placeholder="Ask ByteFleak AI..."
+        autocomplete="off"
       >
 
       <button id="sendButton" type="button">
@@ -133,39 +139,91 @@
   </div>
 
   <script>
+    const BACKEND_URL =
+      "https://script.google.com/macros/s/AKfycbz_-iiisClXMkdjaArzSbmYWRU-KwAQvjftlKzUNisQ1EgeGBc9aFaLgUquMWCIM3CqEA/exec";
+
     const input = document.getElementById("userInput");
     const chat = document.getElementById("chat");
     const sendButton = document.getElementById("sendButton");
 
-    sendButton.onclick = function() {
-      sendMessage();
-    };
+    sendButton.addEventListener("click", sendMessage);
 
-    function sendMessage() {
+    input.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    });
 
-      alert("ByteFleak AI button is working!");
+    async function sendMessage() {
 
       const text = input.value.trim();
 
-      if (!text) {
-        return;
-      }
+      if (!text) return;
 
       const userMessage = document.createElement("div");
       userMessage.className = "message user";
       userMessage.textContent = text;
-
       chat.appendChild(userMessage);
 
       input.value = "";
+      sendButton.disabled = true;
 
       const aiMessage = document.createElement("div");
       aiMessage.className = "message ai";
       aiMessage.textContent = "Thinking...";
-
       chat.appendChild(aiMessage);
 
       chat.scrollTop = chat.scrollHeight;
+
+      try {
+
+        const response = await fetch(BACKEND_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            message: text
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          aiMessage.textContent =
+            "Backend error: " + data.error;
+          return;
+        }
+
+        if (
+          data.candidates &&
+          data.candidates[0] &&
+          data.candidates[0].content &&
+          data.candidates[0].content.parts &&
+          data.candidates[0].content.parts[0]
+        ) {
+
+          aiMessage.textContent =
+            data.candidates[0].content.parts[0].text;
+
+        } else {
+
+          aiMessage.textContent =
+            "Sorry, I couldn't get a response from ByteFleak AI.";
+
+        }
+
+      } catch (error) {
+
+        console.error(error);
+
+        aiMessage.textContent =
+          "Connection error. Please try again.";
+
+      } finally {
+
+        sendButton.disabled = false;
+        input.focus();
+        chat.scrollTop = chat.scrollHeight;
+
+      }
     }
   </script>
 
